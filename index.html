@@ -16,6 +16,11 @@ a{color:inherit;text-decoration:none}
 button{font-family:inherit}
 
 @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:0.35}}
+@keyframes needleSway{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+
+/* Fixed-position pseudo-element rather than background-attachment:fixed --
+   the latter is unreliable on iOS Safari (ignored or janky on scroll). */
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.28) 100%)}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -47,13 +52,28 @@ h1{font-size:30px;font-weight:500;color:#FFF;line-height:1.2;margin-bottom:16px}
 .btn-cta{display:block;width:100%;background:#F59E0B;color:#2B1A00;font-weight:700;font-size:16px;padding:15px 24px;border-radius:12px;border:none;cursor:pointer;text-align:center}
 .trust-line{font-size:12.5px;color:#8B8B9A;text-align:center;margin-top:14px}
 
-.hero-visual{margin-top:36px}
-.coord-card{background:#15151F;border:1px solid #2A2A3E;border-radius:14px;padding:22px 20px;text-align:center;max-width:420px;margin:0 auto}
+.hero-visual{margin-top:36px;position:relative}
+.coord-spotlight{position:absolute;top:-90px;left:50%;transform:translateX(-50%);width:360px;height:360px;background:radial-gradient(ellipse at center,rgba(245,158,11,0.16) 0%,rgba(245,158,11,0.05) 42%,transparent 70%);pointer-events:none}
+.coord-card{position:relative;background:#15151F;border:1px solid #2A2A3E;border-radius:14px;padding:34px 16px 30px;text-align:center;max-width:420px;margin:0 auto}
+.coord-perf-row{position:absolute;left:0;right:0;display:flex;justify-content:space-evenly;padding:0 22px;pointer-events:none}
+.coord-perf-row.top{top:12px}
+.coord-perf-row.bottom{bottom:12px}
+.coord-perf{width:6px;height:6px;border-radius:2px;background:#0B0B14;border:1px solid #2A2A3E}
 .coord-label{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2.5px;color:#8B8B9A;margin-bottom:14px}
-.coord-display{font-family:'Share Tech Mono',monospace;font-size:19px;letter-spacing:1px;color:#8B8B9A;margin-bottom:12px;word-spacing:2px}
-.cslot{color:#8B8B9A}
-.cslot.solved{color:#F59E0B;font-weight:700}
+.coord-display{font-family:'Share Tech Mono',monospace;font-size:19px;letter-spacing:0.5px;color:#8B8B9A;margin-bottom:12px;word-spacing:1px}
+.cslot{color:#8B8B9A;display:inline-block;transition:transform .09s linear;transform-origin:center 55%}
+.cslot.solved{color:#F59E0B;font-weight:700;text-shadow:0 0 14px rgba(245,158,11,.6)}
+.cslot.flip{transform:rotateX(90deg)}
 .coord-caption{font-size:12px;color:#7F7D92}
+
+/* Fluid size instead of a hard breakpoint: ramps from 22px at 360px up to
+   the full approved 25px by 400px, holding there for every wider width.
+   19px stays the base below 360px (the widest point that still wraps even
+   at 22px). Tuned and verified against real per-character measurements
+   across 360/375/390/393/412/414/428 -- see chat for the raw numbers. */
+@media(min-width:360px){
+  .coord-display{font-size:clamp(22px, calc(7.5vw - 5px), 25px)}
+}
 
 /* ── HOW TO PLAY ── */
 .section{padding:48px 20px;border-top:0.5px solid #1F1F2E}
@@ -61,7 +81,10 @@ h1{font-size:30px;font-weight:500;color:#FFF;line-height:1.2;margin-bottom:16px}
 .how-rows{display:flex;flex-direction:column;gap:22px}
 .how-row{display:flex;align-items:flex-start;gap:16px;opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
 .how-row.in-view{opacity:1;transform:translateY(0)}
-.how-badge{flex-shrink:0;width:34px;height:34px;border-radius:8px;background:#26215C;color:#CECBF6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.how-badge-row{flex-shrink:0;display:flex;align-items:center;gap:10px}
+.how-badge{width:34px;height:34px;border-radius:8px;background:#26215C;color:#CECBF6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.how-icon{color:#8B8B9A;flex-shrink:0}
+.how-icon .needle{transform-origin:16px 16px;animation:needleSway 4s ease-in-out infinite alternate}
 .how-title{font-size:16px;font-weight:500;color:#FFF;margin-bottom:4px}
 .how-desc{font-size:13.5px;color:#B8B4CE;line-height:1.55}
 
@@ -108,7 +131,7 @@ footer{border-top:0.5px solid #1F1F2E;padding:20px;display:flex;align-items:cent
   .section h2{font-size:33px}
   .how-rows{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
   .how-row{flex-direction:column}
-  .how-badge{margin-bottom:6px}
+  .how-badge-row{margin-bottom:6px}
 
   .email-form{max-width:440px}
 }
@@ -132,12 +155,15 @@ footer{border-top:0.5px solid #1F1F2E;padding:20px;display:flex;align-items:cent
       <div class="trust-line">No app store &middot; No account &middot; Works in your browser</div>
     </div>
     <div class="hero-visual">
+      <div class="coord-spotlight"></div>
       <div class="coord-card">
+        <div class="coord-perf-row top"><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div></div>
         <div class="coord-label">DESTINATION LOCKED</div>
         <div class="coord-display">
           51.3<span class="cslot solved" data-final="8">8</span><span class="cslot" data-final="?">?</span><span class="cslot" data-final="?">?</span>&deg; N&nbsp;&nbsp;&nbsp;0.5<span class="cslot solved" data-final="4">4</span><span class="cslot" data-final="?">?</span><span class="cslot" data-final="?">?</span>&deg; E
         </div>
         <div class="coord-caption">Each correct answer reveals another digit.</div>
+        <div class="coord-perf-row bottom"><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div><div class="coord-perf"></div></div>
       </div>
     </div>
   </div>
@@ -150,21 +176,45 @@ footer{border-top:0.5px solid #1F1F2E;padding:20px;display:flex;align-items:cent
     <h2>Three steps to the reward</h2>
     <div class="how-rows">
       <div class="how-row">
-        <div class="how-badge">1</div>
+        <div class="how-badge-row">
+          <div class="how-badge">1</div>
+          <svg class="how-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="26" height="26" rx="3" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="7" cy="7" r="1.2" fill="currentColor"/>
+            <circle cx="16" cy="7" r="1.2" fill="currentColor"/>
+            <circle cx="25" cy="7" r="1.2" fill="currentColor"/>
+            <circle cx="7" cy="25" r="1.2" fill="currentColor"/>
+            <circle cx="16" cy="25" r="1.2" fill="currentColor"/>
+            <circle cx="25" cy="25" r="1.2" fill="currentColor"/>
+          </svg>
+        </div>
         <div class="how-text">
           <div class="how-title">Solve movie trivia</div>
           <div class="how-desc">Every correct answer unmasks a digit of a real hidden GPS coordinate.</div>
         </div>
       </div>
       <div class="how-row">
-        <div class="how-badge">2</div>
+        <div class="how-badge-row">
+          <div class="how-badge">2</div>
+          <svg class="how-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="1.5"/>
+            <line class="needle" x1="16" y1="16" x2="16" y2="6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="16" cy="16" r="1.6" fill="currentColor"/>
+          </svg>
+        </div>
         <div class="how-text">
           <div class="how-title">Follow the compass</div>
           <div class="how-desc">Your phone guides you street by street — it glows green when you're on track.</div>
         </div>
       </div>
       <div class="how-row">
-        <div class="how-badge">3</div>
+        <div class="how-badge-row">
+          <div class="how-badge">3</div>
+          <svg class="how-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M4 12a3 3 0 0 1 3-3h18a3 3 0 0 1 3 3v2a2 2 0 0 0 0 4v2a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-2a2 2 0 0 0 0-4v-2z" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="16" y1="9" x2="16" y2="23" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2"/>
+          </svg>
+        </div>
         <div class="how-text">
           <div class="how-title">Claim your reward</div>
           <div class="how-desc">Arrive at the secret location and the reveal unlocks — vouchers, prizes, glory.</div>
@@ -219,9 +269,11 @@ footer{border-top:0.5px solid #1F1F2E;padding:20px;display:flex;align-items:cent
 </footer>
 
 <script>
-// ── COORDINATE DECRYPT ── cycles each slot through random digits before
-// settling to its real value (gold) or back to "?" (unsolved). Loops every
-// 8s so returning eyes catch it. Off entirely under prefers-reduced-motion.
+// ── COORDINATE TUMBLE-REVEAL ── each slot flips through several random
+// digits before settling to its real value (gold, glowing) or back to "?"
+// (still locked). Runs once on load, staggered left to right; replays if
+// the card scrolls into view for the first time. Off entirely under
+// prefers-reduced-motion.
 (function () {
   var slots = Array.prototype.slice.call(document.querySelectorAll('.cslot'));
   if (!slots.length) return;
@@ -233,20 +285,27 @@ footer{border-top:0.5px solid #1F1F2E;padding:20px;display:flex;align-items:cent
 
   if (reduceMotion) { settleAll(); return; }
 
+  function tumbleSlot(el, finalVal, steps, stepDelay, startDelay) {
+    var i = 0;
+    function step() {
+      el.classList.add('flip');
+      setTimeout(function () {
+        el.textContent = (i < steps - 1) ? String(Math.floor(Math.random() * 10)) : finalVal;
+        el.classList.remove('flip');
+        i++;
+        if (i < steps) setTimeout(step, stepDelay + i * 25);
+      }, 90);
+    }
+    setTimeout(step, startDelay);
+  }
+
   function runCycle() {
     slots.forEach(function (el, i) {
-      var iv = setInterval(function () {
-        el.textContent = String(Math.floor(Math.random() * 10));
-      }, 55);
-      setTimeout(function () {
-        clearInterval(iv);
-        el.textContent = el.getAttribute('data-final');
-      }, 500 + i * 110);
+      tumbleSlot(el, el.getAttribute('data-final'), 7, 80, i * 90);
     });
   }
 
   runCycle();
-  setInterval(runCycle, 8000);
 
   var card = document.querySelector('.coord-card');
   if (card && 'IntersectionObserver' in window) {
